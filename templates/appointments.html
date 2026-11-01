@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Appointments · MediAssist</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}" />
+</head>
+<body>
+
+<!-- ===== Topbar ===== -->
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark">✚</span>
+    MediAssist
+  </div>
+  <nav class="topbar-nav">
+    <a href="{{ url_for('dashboard') }}">🏠 Dashboard</a>
+    <a href="{{ url_for('appointments') }}" class="active">📅 Appointments</a>
+    <a href="{{ url_for('health_records') }}">📋 Health Records</a>
+    <a href="{{ url_for('medicine_logs') }}">💊 Medicine Logs</a>
+    <a href="{{ url_for('food_logs') }}">🍴 Food Logs</a>
+    <a href="{{ url_for('fitness') }}">🏃 Fitness</a>
+    <a href="{{ url_for('ai_assistant') }}">🤖 AI Assistant</a>
+  </nav>
+  {% include "_profile_menu.html" %}
+</header>
+
+<div class="app-shell">
+
+  <!-- ===== Sidebar ===== -->
+  <aside class="sidebar">
+    <ul class="side-nav">
+      <li><a href="{{ url_for('dashboard') }}"><span class="icon">🏠</span> Dashboard</a></li>
+      <li><a href="{{ url_for('appointments') }}" class="active"><span class="icon">📅</span> Appointments</a></li>
+      <li><a href="{{ url_for('health_records') }}"><span class="icon">📋</span> Health Records</a></li>
+      <li><a href="{{ url_for('medicine_logs') }}"><span class="icon">💊</span> Medicine Logs</a></li>
+      <li><a href="{{ url_for('food_logs') }}"><span class="icon">🍴</span> Food Logs</a></li>
+      <li><a href="{{ url_for('fitness') }}"><span class="icon">🏃</span> Fitness</a></li>
+      <li><a href="{{ url_for('ai_assistant') }}"><span class="icon">🤖</span> AI Assistant</a></li>
+    </ul>
+  </aside>
+
+  <!-- ===== Main content ===== -->
+  <main class="main">
+    <div class="page">
+
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}
+          <div class="card" style="padding:14px 22px; margin-bottom:18px; border-color:var(--blue-500); color:var(--blue-700);">
+            {{ messages[0] }}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      <div class="page-header">
+        <div>
+          <h1>Appointments</h1>
+          <p>Your requests stay <strong>Pending</strong> until the doctor approves them.</p>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('bookModal')">+ Book Appointment</button>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat-tile">
+          <div class="stat-icon tint-blue">📅</div>
+          <div class="stat-label">Upcoming</div>
+          <div class="stat-value">{{ stats.upcoming }}</div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-icon tint-green">✅</div>
+          <div class="stat-label">Confirmed</div>
+          <div class="stat-value">{{ stats.confirmed }}</div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-icon tint-amber">⏳</div>
+          <div class="stat-label">Pending</div>
+          <div class="stat-value">{{ stats.pending }}</div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-icon tint-violet">🗂️</div>
+          <div class="stat-label">Completed</div>
+          <div class="stat-value">{{ stats.completed }}</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2>All appointments</h2>
+        </div>
+
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Appointment ID</th>
+                <th>Doctor</th>
+                <th>Date &amp; Time</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for a in appointments %}
+              <tr>
+                <td class="cell-muted">#{{ a.appointment_id }}</td>
+                <td>
+                  <div class="cell-primary">{{ a.doctor_name }}</div>
+                  <div class="cell-muted">{{ a.specialization or "" }}</div>
+                </td>
+                <td>{{ a.date_time.strftime("%d %b, %I:%M %p") }}</td>
+                <td>
+                  <span class="badge badge-{{ a.status }}">{{ a.status|capitalize }}</span>
+                  {% if a.status == "pending" %}<div class="cell-muted" style="margin-top:4px;font-size:12px;">Awaiting doctor approval</div>{% endif %}
+                </td>
+                <td class="row-actions">
+                  {% if a.status not in ["completed", "cancelled"] %}
+                  <form action="{{ url_for('cancel_appointment', appointment_id=a.appointment_id) }}" method="POST" style="display:inline" onsubmit="return confirm('Cancel this appointment?');">
+                    <button type="submit" class="icon-btn" title="Cancel">✕</button>
+                  </form>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        {% if not appointments %}
+        <div class="empty-state">
+          <div class="empty-icon">📅</div>
+          <p>No appointments yet. Book your first one to get started.</p>
+          <button class="btn btn-primary" onclick="openModal('bookModal')">+ Book Appointment</button>
+        </div>
+        {% endif %}
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- ===== Book Appointment Modal ===== -->
+<div class="modal-overlay" id="bookModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Book an appointment</h3>
+      <button class="modal-close" type="button" onclick="closeModal('bookModal')">✕</button>
+    </div>
+    <form action="{{ url_for('book_appointment') }}" method="POST">
+      <div class="modal-body">
+        <div class="field">
+          <label for="doctor_id">Doctor</label>
+          <select id="doctor_id" name="doctor_id" required>
+            <option value="" disabled selected>Select a doctor</option>
+            {% for d in doctors %}
+            <option value="{{ d.doctor_id }}">Dr. {{ d.name }} — {{ d.specialization or "General" }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label for="date">Date</label>
+          <input type="date" id="date" name="date" min="{{ today.isoformat() }}" required />
+        </div>
+        <div class="field">
+          <label for="time">Time</label>
+          <input type="time" id="time" name="time" required />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModal('bookModal')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Book Appointment</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

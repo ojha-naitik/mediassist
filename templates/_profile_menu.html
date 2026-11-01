@@ -1,0 +1,33 @@
+{# Profile menu shown at the top-right of every logged-in page.
+   Shows the user's name, email, role and a Logout button. #}
+{% set _name = session.get('name') or 'Account' %}
+{% set _parts = _name.split() %}
+{% set _initials = ((_parts[0][0] ~ (_parts[-1][0] if _parts|length > 1 else '')) | upper) if _parts else 'U' %}
+{% set _is_doctor = session.get('role') == 'doctor' %}
+<div class="profile-menu" id="profileMenu">
+  <button type="button" class="profile-trigger" onclick="toggleProfileMenu(event)"
+          aria-haspopup="true" aria-expanded="false" aria-controls="profileDropdown">
+    <span class="profile-avatar">{{ _initials }}</span>
+    <span class="profile-name">{{ _name }}</span>
+    <span class="profile-caret">&#9662;</span>
+  </button>
+
+  <div class="profile-dropdown" id="profileDropdown" role="menu">
+    <div class="profile-head">
+      <span class="profile-avatar profile-avatar-lg">{{ _initials }}</span>
+      <div class="profile-info">
+        <div class="profile-info-name">{{ _is_doctor and 'Dr. ' or '' }}{{ _name }}</div>
+        <div class="profile-info-email">{{ session.get('email', '') }}</div>
+        <span class="profile-role">{{ 'Doctor' if _is_doctor else 'Patient' }}</span>
+      </div>
+    </div>
+
+    {% if _is_doctor and session.get('registration_no') %}
+    <div class="profile-row"><span>Registration No.</span><strong>{{ session.get('registration_no') }}</strong></div>
+    {% endif %}
+
+    <form action="{{ url_for('logout') }}" method="POST" class="profile-logout-form">
+      <button type="submit" class="profile-logout" role="menuitem">&#10162; Logout</button>
+    </form>
+  </div>
+</div>

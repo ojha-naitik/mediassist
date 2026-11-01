@@ -1,0 +1,150 @@
+{% extends "base_app.html" %}
+{% block title %}Doctor Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>{{ greeting }}, Dr. {{ session.get('name') }}</h1>
+    <p>
+      {{ profile.specialization or 'General' }}
+      {% if profile.qualification %}· {{ profile.qualification }}{% endif %}
+      · Reg. No. <strong>{{ profile.registration_no }}</strong>
+    </p>
+  </div>
+</div>
+
+<!-- ===== Open a patient's report by scanning / entering their QR code ===== -->
+<div class="card section-gap">
+  <div class="card-header"><h2>&#128241; Open a Patient's Medical Report</h2></div>
+  <p class="card-sub" style="margin-bottom:14px;">Scan a patient's QR code with your phone camera, or paste the code / link they shared with you below.</p>
+  <form class="row-actions" style="gap:10px;" onsubmit="return goToPatientReport(event);">
+    <input type="text" id="reportTokenInput" placeholder="Paste QR code / report link here"
+           style="flex:1; min-width:220px; padding:10px 12px; border:1px solid #e2e9f7; border-radius:8px; font-size:14px;" required>
+    <button type="submit" class="btn btn-sm btn-primary">View Report</button>
+  </form>
+</div>
+
+<div class="stat-grid">
+  <div class="stat-tile">
+    <div class="stat-icon tint-amber">⏳</div>
+    <div class="stat-label">Awaiting your approval</div>
+    <div class="stat-value">{{ stats.pending }}</div>
+  </div>
+  <div class="stat-tile">
+    <div class="stat-icon tint-green">📅</div>
+    <div class="stat-label">Confirmed today</div>
+    <div class="stat-value">{{ stats.today }}</div>
+  </div>
+  <div class="stat-tile">
+    <div class="stat-icon tint-blue">✅</div>
+    <div class="stat-label">All confirmed</div>
+    <div class="stat-value">{{ stats.confirmed }}</div>
+  </div>
+  <div class="stat-tile">
+    <div class="stat-icon tint-violet">🧑‍🤝‍🧑</div>
+    <div class="stat-label">Patients</div>
+    <div class="stat-value">{{ stats.patients }}</div>
+  </div>
+</div>
+
+<!-- ===== Pending requests: doctor approves or declines ===== -->
+<div class="card section-gap" id="requests">
+  <div class="card-header">
+    <h2>Appointment requests <span class="count-pill">{{ pending|length }}</span></h2>
+  </div>
+  {% if pending %}
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr><th>ID</th><th>Patient</th><th>Requested for</th><th>Actions</th></tr>
+      </thead>
+      <tbody>
+        {% for a in pending %}
+        <tr>
+          <td class="cell-muted">#{{ a.appointment_id }}</td>
+          <td>
+            <div class="cell-primary">{{ a.patient_name }}{% if a.patient_age is not none %} <span class="cell-muted">· {{ a.patient_age }} yrs</span>{% endif %}</div>
+            <div class="cell-muted">{{ a.patient_email }}{% if a.patient_phone %} · {{ a.patient_phone }}{% endif %}</div>
+          </td>
+          <td>{{ a.date_time.strftime("%a, %d %b %Y · %I:%M %p") }}</td>
+          <td>
+            <div class="row-actions">
+              <form method="POST" action="{{ url_for('doctor_appointment_action', appointment_id=a.appointment_id, action='approve') }}">
+                <button type="submit" class="btn btn-sm btn-success">✓ Approve</button>
+              </form>
+              <form method="POST" action="{{ url_for('doctor_appointment_action', appointment_id=a.appointment_id, action='decline') }}"
+                    onsubmit="return confirm('Decline this appointment request?');">
+                <button type="submit" class="btn btn-sm btn-danger-outline">✕ Decline</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-icon">🎉</div>
+    <p>No requests waiting. New bookings from patients will appear here for your approval.</p>
+  </div>
+  {% endif %}
+</div>
+
+<!-- ===== Everything else ===== -->
+<div class="card section-gap">
+  <div class="card-header"><h2>Schedule &amp; history</h2></div>
+  {% if others %}
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr><th>ID</th><th>Patient</th><th>Date &amp; Time</th><th>Status</th><th>Actions</th></tr>
+      </thead>
+      <tbody>
+        {% for a in others %}
+        <tr>
+          <td class="cell-muted">#{{ a.appointment_id }}</td>
+          <td>
+            <div class="cell-primary">{{ a.patient_name }}</div>
+            <div class="cell-muted">{{ a.patient_email }}</div>
+          </td>
+          <td>{{ a.date_time.strftime("%d %b %Y, %I:%M %p") }}</td>
+          <td><span class="badge badge-{{ a.status }}">{{ a.status|capitalize }}</span></td>
+          <td>
+            {% if a.status == 'confirmed' %}
+            <div class="row-actions">
+              <form method="POST" action="{{ url_for('doctor_appointment_action', appointment_id=a.appointment_id, action='complete') }}">
+                <button type="submit" class="btn btn-sm btn-primary">Mark completed</button>
+              </form>
+              <form method="POST" action="{{ url_for('doctor_appointment_action', appointment_id=a.appointment_id, action='decline') }}"
+                    onsubmit="return confirm('Cancel this confirmed appointment?');">
+                <button type="submit" class="btn btn-sm btn-danger-outline">Cancel</button>
+              </form>
+            </div>
+            {% else %}<span class="cell-muted">—</span>{% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state"><div class="empty-icon">📅</div><p>No confirmed, completed or cancelled appointments yet.</p></div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function goToPatientReport(event) {
+    event.preventDefault();
+    const raw = document.getElementById("reportTokenInput").value.trim();
+    if (!raw) return false;
+    // accept either a bare token or a full /report/<token> link that was pasted in
+    const match = raw.match(/\/report\/([^\/?#\s]+)/);
+    const token = match ? match[1] : raw;
+    window.location.href = "{{ url_for('patient_report', token='__TOKEN__') }}".replace('__TOKEN__', encodeURIComponent(token));
+    return false;
+  }
+</script>
+{% endblock %}

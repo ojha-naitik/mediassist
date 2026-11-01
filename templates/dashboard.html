@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MediAssist — Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles/dashboard.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
+</head>
+
+<body>
+
+  <div class="layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon">
+          <img class="app-icon" src="{{url_for('static',filename='icons/app-icon.png')}}">
+        </div>
+        <span class="brand-name">MediAssist</span>
+      </div>
+
+      <nav class="nav">
+        <a href="{{ url_for('dashboard') }}" class="nav-item active">
+          <span class="nav-icon">&#8962;</span> Dashboard
+        </a>
+        <a href="{{ url_for('appointments') }}" class="nav-item">
+          <span class="nav-icon">&#128197;</span> Appointments
+        </a>
+        <a href="{{ url_for('health_records') }}" class="nav-item">
+          <span class="nav-icon">&#128196;</span> Health Records
+        </a>
+        <a href="{{ url_for('medicine_logs') }}" class="nav-item">
+          <span class="nav-icon">&#128138;</span> Medicine Logs
+        </a>
+        <a href="{{ url_for('food_logs') }}" class="nav-item">
+          <span class="nav-icon">&#127860;</span> Food Logs
+        </a>
+        <a href="{{ url_for('fitness') }}" class="nav-item">
+          <span class="nav-icon">&#127939;</span> Fitness
+        </a>
+        <a href="{{ url_for('ai_assistant') }}" class="nav-item">
+          <span class="nav-icon">&#129302;</span> AI Assistant
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="footer-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+            <path d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0112 6a5.5 5.5 0 019.5 6c-2.5 4.5-9.5 9-9.5 9z" fill="#BFDBFE" />
+            <path d="M4 12h4l1.5-3 2 6 1.5-3H20" stroke="#2563EB" stroke-width="1.4" fill="none" stroke-linecap="round"
+              stroke-linejoin="round" />
+          </svg>
+        </div>
+        <p class="footer-title">Better Health</p>
+        <p class="footer-sub">Brighter Tomorrow</p>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <div class="main">
+
+      <!-- Topbar -->
+      <header class="topbar">
+        <nav class="topnav">
+          <a href="{{ url_for('dashboard') }}" class="top-link active"><span class="top-icon">&#8962;</span> Dashboard</a>
+          <a href="{{ url_for('appointments') }}" class="top-link"><span class="top-icon">&#128197;</span> Appointments</a>
+          <a href="{{ url_for('health_records') }}" class="top-link"><span class="top-icon">&#128196;</span> Health Records</a>
+          <a href="{{ url_for('medicine_logs') }}" class="top-link"><span class="top-icon">&#128138;</span> Medicine Logs</a>
+          <a href="{{ url_for('food_logs') }}" class="top-link"><span class="top-icon">&#127860;</span> Food Logs</a>
+          <a href="{{ url_for('fitness') }}" class="top-link"><span class="top-icon">&#127939;</span> Fitness</a>
+          <a href="{{ url_for('ai_assistant') }}" class="top-link"><span class="top-icon">&#129302;</span> AI Assistant</a>
+        </nav>
+
+        {% include "_profile_menu.html" %}
+      </header>
+
+      <main class="content">
+
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            <div style="background:var(--blue-50); border:1px solid var(--blue-100); border-radius:var(--radius-sm); padding:12px 18px; color:var(--blue-700); font-size:0.9rem;">
+              {{ messages[0] }}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        <!-- Greeting -->
+        <section class="greeting">
+          <div>
+            <h1>{{ greeting }}, {{ name or "there" }}! <span class="wave">&#128075;</span></h1>
+            <p>Here's your health overview for today.</p>
+          </div>
+          <div class="greeting-art" aria-hidden="true">
+            <img class="doctor-image" src="{{url_for('static',filename='icons/doctor.png')}}">
+          </div>
+        </section>
+
+        <!-- Stat cards -->
+        <section class="stats-grid">
+          <article class="stat-card">
+            <div class="stat-icon icon-blue">&#128197;</div>
+            <div class="stat-body">
+              <p class="stat-label">Upcoming Appointments</p>
+              <p class="stat-value">{{ stats.upcoming_appointments }}</p>
+              <p class="stat-sub">Pending or confirmed</p>
+            </div>
+            <a href="{{ url_for('appointments') }}" class="stat-chevron">&#8250;</a>
+          </article>
+
+          <article class="stat-card">
+            <div class="stat-icon icon-blue">&#128196;</div>
+            <div class="stat-body">
+              <p class="stat-label">Health Records</p>
+              <p class="stat-value">{{ stats.health_records }}</p>
+              <p class="stat-sub">Prescriptions on file</p>
+            </div>
+            <a href="{{ url_for('health_records') }}" class="stat-chevron">&#8250;</a>
+          </article>
+
+          <article class="stat-card">
+            <div class="stat-icon icon-blue">&#128138;</div>
+            <div class="stat-body">
+              <p class="stat-label">Medicine Reminders</p>
+              <p class="stat-value">{{ stats.medicine_reminders }}</p>
+              <p class="stat-sub">Medicines prescribed</p>
+            </div>
+            <a href="{{ url_for('medicine_logs') }}" class="stat-chevron">&#8250;</a>
+          </article>
+
+          <article class="stat-card">
+            <div class="stat-icon icon-blue">&#128147;</div>
+            <div class="stat-body">
+              <p class="stat-label">Health Score</p>
+              <p class="stat-value">{{ stats.health_score }}<span class="stat-value-sub"> / 100</span></p>
+              <p class="stat-sub">{{ stats.health_label }} &middot; activity + food logs</p>
+            </div>
+            <span class="stat-chevron">&#8250;</span>
+          </article>
+        </section>
+
+        <!-- Share with a Doctor (unique patient QR code) -->
+        <section class="panel qr-panel">
+          <div class="panel-header">
+            <div class="panel-title-group">
+              <span class="panel-icon">&#128241;</span>
+              <div>
+                <h2>Share with a Doctor</h2>
+                <p class="panel-sub">Your personal QR code &mdash; a doctor scans it to instantly pull up your full medical report.</p>
+              </div>
+            </div>
+          </div>
+          <div class="qr-panel-body">
+            <div class="qr-panel-text">
+              <p>Show this at the clinic or on a video call. No need to explain your history &mdash; prescriptions, medicines, appointments and recent activity are all right there.</p>
+              <button type="button" class="btn-primary qr-open-btn" onclick="openModal('qrModal')">
+                <span class="btn-icon">&#128241;</span> View My QR Code
+              </button>
+            </div>
+            <button type="button" class="qr-panel-preview" onclick="openModal('qrModal')" aria-label="View my QR code">
+              <img src="{{ url_for('patient_qr_code') }}" alt="Your medical report QR code" class="qr-thumb">
+            </button>
+          </div>
+        </section>
+
+        <!-- Middle row: chart + schedule + ai -->
+        <section class="middle-grid">
+
+          <!-- Health timeline (real data from MEALS + FITNESS) -->
+          <article class="panel chart-panel">
+            <div class="panel-header">
+              <div class="panel-title-group">
+                <span class="panel-icon">&#128200;</span>
+                <div>
+                  <h2>Health Timeline</h2>
+                  <p class="panel-sub">Calories eaten vs. calories burned, day by day</p>
+                </div>
+              </div>
+              <select class="range-select" id="rangeSelect" aria-label="Date range">
+                <option value="7">Last 7 Days</option>
+                <option value="30">Last 30 Days</option>
+                <option value="90">Last 90 Days</option>
+              </select>
+            </div>
+
+            <div class="tl-legend">
+              <span><i class="tl-dot tl-dot-in"></i>Calories eaten (Food Logs)</span>
+              <span><i class="tl-dot tl-dot-out"></i>Calories burned (Fitness)</span>
+            </div>
+
+            <div class="chart-wrap tl-wrap" id="timelineWrap">
+              <svg id="timelineSvg" class="tl-svg" viewBox="0 0 320 260" role="img"
+                   aria-label="Timeline of calories eaten and burned"></svg>
+              <div class="tl-tip" id="timelineTip" hidden></div>
+              <div class="tl-empty" id="timelineEmpty" hidden>
+                Nothing logged in this period yet.<br>
+                <a href="{{ url_for('food_logs') }}">Log a meal</a> or <a href="{{ url_for('fitness') }}">log a workout</a> to see your timeline.
+              </div>
+            </div>
+
+            <div class="tl-summary" id="timelineSummary"></div>
+          </article>
+
+          <!-- Today's schedule -->
+          <article class="panel schedule-panel">
+            <div class="panel-header">
+              <div class="panel-title-group">
+                <span class="panel-icon">&#128197;</span>
+                <h2>Today's Schedule</h2>
+              </div>
+            </div>
+
+            <div class="schedule-list">
+              {% for a in todays_appointments %}
+              <a class="schedule-item" href="{{ url_for('appointments') }}">
+                <div class="schedule-icon">&#128100;</div>
+                <div class="schedule-body">
+                  <p class="schedule-time">{{ a.date_time.strftime("%I:%M %p") }} &middot; {{ a.status|capitalize }}</p>
+                  <p class="schedule-title">Appointment</p>
+                  <p class="schedule-sub">Dr. {{ a.doctor_name }}{% if a.specialization %} ({{ a.specialization }}){% endif %}</p>
+                </div>
+                <span class="stat-chevron">&#8250;</span>
+              </a>
+              {% endfor %}
+
+              {% for m in medicine_reminders %}
+              <a class="schedule-item" href="{{ url_for('medicine_logs') }}">
+                <div class="schedule-icon">&#128138;</div>
+                <div class="schedule-body">
+                  <p class="schedule-time">{{ m.frequency or "As directed" }}</p>
+                  <p class="schedule-title">Medicine Reminder</p>
+                  <p class="schedule-sub">{{ m.name }}{% if m.dosage %} {{ m.dosage }}{% endif %}</p>
+                </div>
+                <span class="stat-chevron">&#8250;</span>
+              </a>
+              {% endfor %}
+
+              {% if not todays_appointments and not medicine_reminders %}
+              <p class="panel-sub">Nothing scheduled for today.</p>
+              {% endif %}
+            </div>
+          </article>
+
+          <!-- AI Health Support -->
+          <article class="panel ai-panel">
+            <div class="panel-header">
+              <div class="panel-title-group">
+                <span class="panel-icon">&#128154;</span>
+                <div>
+                  <h2>AI Health Support</h2>
+                  <p class="panel-sub">Get instant answers to your health questions.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="ai-art">
+              <svg width="150" height="140" viewBox="0 0 150 140" fill="none">
+                <circle cx="75" cy="70" r="60" fill="#DCE8FB" />
+                <rect x="35" y="45" width="80" height="65" rx="24" fill="#2563EB" />
+                <circle cx="58" cy="78" r="7" fill="#fff" />
+                <circle cx="92" cy="78" r="7" fill="#fff" />
+                <path d="M60 92 Q75 100 90 92" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" />
+                <rect x="65" y="25" width="20" height="20" rx="6" fill="#2563EB" />
+                <path d="M75 15v10" stroke="#2563EB" stroke-width="3" stroke-linecap="round" />
+                <circle cx="75" cy="112" r="14" fill="#fff" />
+                <path d="M75 105v14M68 112h14" stroke="#2563EB" stroke-width="3" stroke-linecap="round" />
+              </svg>
+            </div>
+
+            <a class="btn-primary ai-btn" href="{{ url_for('ai_assistant') }}">
+              <span class="btn-icon">&#128172;</span> Ask AI Assistant
+            </a>
+          </article>
+        </section>
+
+        <!-- Bottom row: records + quick actions -->
+        <section class="bottom-grid">
+
+          <article class="panel records-panel">
+            <div class="panel-header">
+              <div class="panel-title-group">
+                <span class="panel-icon">&#128196;</span>
+                <h2>Recent Health Records</h2>
+              </div>
+              <a href="{{ url_for('health_records') }}" class="view-all">View All</a>
+            </div>
+
+            <div class="record-list">
+              {% for r in recent_records %}
+              <a class="record-item" href="{{ url_for('health_records') }}">
+                <div class="record-icon icon-blue">&#128138;</div>
+                <div class="record-body">
+                  <p class="record-title">Prescription #{{ r.prescription_id }} &middot; Dr. {{ r.doctor_name }}</p>
+                  <p class="record-date">{{ r.date.strftime("%b %d, %Y") }}</p>
+                </div>
+                <span class="stat-chevron">&#8250;</span>
+              </a>
+              {% else %}
+              <p class="panel-sub">No health records yet.</p>
+              {% endfor %}
+            </div>
+          </article>
+
+          <article class="panel actions-panel">
+            <div class="panel-header">
+              <div class="panel-title-group">
+                <span class="panel-icon">&#9889;</span>
+                <h2>Quick Actions</h2>
+              </div>
+            </div>
+
+            <div class="actions-grid">
+              <a href="{{ url_for('appointments') }}" class="action-card">
+                <div class="action-icon">&#128197;</div>
+                <p>Book Appointment</p>
+                <span class="action-arrow">&#8594;</span>
+              </a>
+              <a href="{{ url_for('health_records') }}" class="action-card">
+                <div class="action-icon">&#10133;</div>
+                <p>Add Health Record</p>
+                <span class="action-arrow">&#8594;</span>
+              </a>
+              <a href="{{ url_for('medicine_logs') }}" class="action-card">
+                <div class="action-icon">&#128138;</div>
+                <p>Medicine Log</p>
+                <span class="action-arrow">&#8594;</span>
+              </a>
+              <a href="{{ url_for('food_logs') }}" class="action-card">
+                <div class="action-icon">&#127860;</div>
+                <p>Food Log</p>
+                <span class="action-arrow">&#8594;</span>
+              </a>
+            </div>
+          </article>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- ===== QR Code Modal ===== -->
+  <div class="modal-overlay" id="qrModal">
+    <div class="modal qr-modal">
+      <div class="modal-header">
+        <h3>Your Medical Report QR Code</h3>
+        <button class="modal-close" type="button" onclick="closeModal('qrModal')">&#10005;</button>
+      </div>
+      <div class="modal-body qr-modal-body">
+        <img src="{{ url_for('patient_qr_code') }}" alt="Your medical report QR code" class="qr-large">
+        <p class="qr-hint">Let a doctor scan this with their phone camera, or send them the link below.</p>
+        <div class="qr-link-row">
+          <input type="text" readonly class="qr-link-input" id="qrLinkInput" value="{{ report_url or '' }}">
+          <button type="button" class="btn-outline" id="qrCopyBtn" onclick="copyQrLink()">Copy Link</button>
+        </div>
+        <p class="qr-note">&#128274; Only a logged-in doctor can open this link and see your report.</p>
+      </div>
+      <div class="modal-footer">
+        <form method="POST" action="{{ url_for('regenerate_qr_code') }}"
+              onsubmit="return confirm('This will invalidate your current QR code — anyone who has the old one (or a screenshot of it) will no longer be able to use it. Continue?');">
+          <button type="submit" class="btn-outline">Regenerate QR Code</button>
+        </form>
+        <a href="{{ url_for('patient_qr_code') }}" download="my-mediassist-qr-code.png" class="btn-primary">Download PNG</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+  <script>
+    function copyQrLink() {
+      const input = document.getElementById("qrLinkInput");
+      const btn = document.getElementById("qrCopyBtn");
+      if (!input.value) return;
+      input.select();
+      input.setSelectionRange(0, 99999);
+      const done = () => { const old = btn.textContent; btn.textContent = "Copied!"; setTimeout(() => { btn.textContent = old; }, 1500); };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(input.value).then(done).catch(() => document.execCommand("copy") && done());
+      } else {
+        document.execCommand("copy");
+        done();
+      }
+    }
+  </script>
+  <script>
+    /* ---------- Health timeline: draws an SVG line chart from /api/timeline ---------- */
+    (function () {
+      const API = "{{ url_for('api_timeline') }}";
+      let W = 760, H = 260;
+      const L = 52, R = 16, T = 18, B = 34;
+      const NS = "http://www.w3.org/2000/svg";
+      const svg = document.getElementById("timelineSvg");
+      const wrap = document.getElementById("timelineWrap");
+      const tip = document.getElementById("timelineTip");
+      const empty = document.getElementById("timelineEmpty");
+      const summary = document.getElementById("timelineSummary");
+      const select = document.getElementById("rangeSelect");
+      let data = null;
+
+      const el = (name, attrs, parent) => {
+        const e = document.createElementNS(NS, name);
+        for (const k in attrs) e.setAttribute(k, attrs[k]);
+        (parent || svg).appendChild(e);
+        return e;
+      };
+      const fmtDay = (iso) => new Date(iso + "T00:00:00").toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+      const sum = (a) => a.reduce((x, y) => x + (y || 0), 0);
+      const vals = (a) => a.filter((v) => v !== null);
+      const kcal = (v) => (v === null ? "no data" : v + " kcal");
+
+      function niceMax(v) {
+        if (v <= 0) return 100;
+        const p = Math.pow(10, Math.floor(Math.log10(v)));
+        const n = v / p;
+        return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 4 ? 4 : n <= 5 ? 5 : 10) * p;
+      }
+
+      function render() {
+        // draw at the real pixel width so text and dots are never stretched
+        svg.style.display = "none";                       // measure the panel without the old svg pushing it wider
+        W = Math.max(320, Math.round(wrap.clientWidth));
+        svg.style.display = "block";
+        svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+        svg.innerHTML = "";
+        const n = data.labels.length;
+        const total = sum(data.intake) + sum(data.burned);
+        empty.hidden = total > 0;
+        svg.style.visibility = total > 0 ? "visible" : "hidden";
+
+        const ymax = niceMax(Math.max(0, ...vals(data.intake), ...vals(data.burned)) * 1.05);
+        const x = (i) => L + (i * (W - L - R)) / (n - 1);
+        const y = (v) => T + (H - T - B) * (1 - v / ymax);
+
+        // gridlines + y labels
+        for (let k = 0; k <= 4; k++) {
+          const v = (ymax * k) / 4, yy = y(v);
+          el("line", { x1: L, x2: W - R, y1: yy, y2: yy, class: "tl-grid" });
+          const t = el("text", { x: L - 8, y: yy + 4, "text-anchor": "end", class: "tl-axis" });
+          t.textContent = Math.round(v);
+        }
+        const yt = el("text", { x: 4, y: 10, class: "tl-axis" }); yt.textContent = "kcal";
+
+        // x labels
+        const step = n <= 7 ? 1 : n <= 30 ? 5 : 15;
+        for (let i = n - 1; i >= 0; i -= step) {
+          const t = el("text", { x: x(i), y: H - 10, "text-anchor": "middle", class: "tl-axis" });
+          t.textContent = fmtDay(data.labels[i]);
+        }
+
+        // build the line in pieces so days with no data leave a gap
+        const runs = (arr) => {
+          const out = []; let cur = [];
+          arr.forEach((v, i) => { if (v === null) { if (cur.length) out.push(cur); cur = []; } else cur.push(i); });
+          if (cur.length) out.push(cur);
+          return out;
+        };
+        const linePath = (arr) => runs(arr).map((r) => r.map((i, k) => (k ? "L" : "M") + x(i).toFixed(1) + "," + y(arr[i]).toFixed(1)).join(" ")).join(" ");
+        const areaPath = (arr) => runs(arr).filter((r) => r.length > 1).map((r) =>
+          r.map((i, k) => (k ? "L" : "M") + x(i).toFixed(1) + "," + y(arr[i]).toFixed(1)).join(" ") +
+          ` L${x(r[r.length - 1]).toFixed(1)},${y(0)} L${x(r[0]).toFixed(1)},${y(0)} Z`).join(" ");
+
+        el("path", { d: areaPath(data.intake), class: "tl-area-in" });
+        el("path", { d: linePath(data.intake), class: "tl-line-in" });
+        el("path", { d: linePath(data.burned), class: "tl-line-out" });
+
+        if (n <= 30) {
+          data.intake.forEach((v, i) => v !== null && el("circle", { cx: x(i), cy: y(v), r: 3.5, class: "tl-pt tl-pt-in" }));
+          data.burned.forEach((v, i) => v !== null && el("circle", { cx: x(i), cy: y(v), r: 3.5, class: "tl-pt tl-pt-out" }));
+        }
+
+        // hover marker
+        const cross = el("line", { y1: T, y2: H - B, class: "tl-cross", visibility: "hidden" });
+        const hIn = el("circle", { r: 5.5, class: "tl-hover tl-hover-in", visibility: "hidden" });
+        const hOut = el("circle", { r: 5.5, class: "tl-hover tl-hover-out", visibility: "hidden" });
+
+        svg.onmousemove = (e) => {
+          const box = svg.getBoundingClientRect();
+          const vx = ((e.clientX - box.left) * W) / box.width;
+          const i = Math.max(0, Math.min(n - 1, Math.round(((vx - L) / (W - L - R)) * (n - 1))));
+          cross.setAttribute("x1", x(i)); cross.setAttribute("x2", x(i)); cross.setAttribute("visibility", "visible");
+          const vIn = data.intake[i], vOut = data.burned[i];
+          hIn.setAttribute("cx", x(i)); hIn.setAttribute("cy", vIn === null ? 0 : y(vIn)); hIn.setAttribute("visibility", vIn === null ? "hidden" : "visible");
+          hOut.setAttribute("cx", x(i)); hOut.setAttribute("cy", vOut === null ? 0 : y(vOut)); hOut.setAttribute("visibility", vOut === null ? "hidden" : "visible");
+          const net = vIn === null || vOut === null ? "—" : (vIn - vOut > 0 ? "+" : "") + (vIn - vOut) + " kcal";
+          tip.innerHTML = `<strong>${fmtDay(data.labels[i])}</strong>` +
+            `<span><i class="tl-dot tl-dot-in"></i>Eaten: ${kcal(vIn)}</span>` +
+            `<span><i class="tl-dot tl-dot-out"></i>Burned: ${kcal(vOut)}</span>` +
+            `<span>Active: ${data.minutes[i] === null ? "no data" : data.minutes[i] + " min"}</span>` +
+            `<span>Net: ${net}</span>`;
+          tip.hidden = false;
+          const wbox = wrap.getBoundingClientRect();
+          let left = (x(i) / W) * box.width + (box.left - wbox.left) + 14;
+          if (left + 170 > wbox.width) left -= 190;
+          tip.style.left = left + "px";
+          tip.style.top = "10px";
+        };
+        svg.onmouseleave = () => {
+          tip.hidden = true;
+          [cross, hIn, hOut].forEach((n) => n.setAttribute("visibility", "hidden"));
+        };
+
+        // summary chips (averages use only days that have something logged)
+        const eatenDays = data.intake.filter((v) => v > 0).length;
+        const burnDays = data.burned.filter((v) => v > 0).length;
+        const chip = (label, value) => `<div class="tl-chip"><span>${label}</span><strong>${value}</strong></div>`;
+        summary.innerHTML =
+          chip("Avg eaten / day", eatenDays ? Math.round(sum(data.intake) / eatenDays) + " kcal" : "—") +
+          chip("Avg burned / day", burnDays ? Math.round(sum(data.burned) / burnDays) + " kcal" : "—") +
+          chip("Active minutes", sum(data.minutes) + " min") +
+          chip("Days with meals logged", eatenDays + " / " + n);
+      }
+
+      function load() {
+        fetch(API + "?days=" + select.value, { credentials: "same-origin" })
+          .then((r) => r.json())
+          .then((d) => { data = d; render(); })
+          .catch(() => { summary.innerHTML = '<p class="panel-sub">Could not load timeline data.</p>'; });
+      }
+      select.addEventListener("change", load);
+      let resizeTimer;
+      window.addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => data && render(), 150); });
+      load();
+    })();
+  </script>
+
+</body>
+
+</html>

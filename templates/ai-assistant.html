@@ -1,0 +1,137 @@
+{% extends "base_app.html" %}
+{% block title %}AI Assistant{% endblock %}
+
+{% block content %}
+{% set is_doctor = session.get('role') == 'doctor' %}
+<div class="page-header">
+  <div>
+    <h1>AI Assistant <span class="status-pill" id="aiStatus" title="Checking the local AI model…">Checking…</span></h1>
+    {% if is_doctor %}
+    <p>A clinical reference and productivity assistant for doctors: drug information, differentials, summarising your schedule and drafting patient instructions.</p>
+    {% else %}
+    <p>A friendly health companion: ask about healthy habits, understand your medicines and appointments, and prepare for doctor visits.</p>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card notice-card">
+  {% if is_doctor %}
+  <strong>Decision support only.</strong> Answers can be wrong or out of date. Always verify doses and guidelines against the drug label or your local protocol.
+  The assistant only sees your profile and upcoming appointments, not individual patient records.
+  {% else %}
+  <strong>Not a doctor.</strong> This assistant gives general health information only. It cannot diagnose, prescribe, or change your medicines.
+  In an emergency call <strong>112</strong> or go to the nearest hospital.
+  {% endif %}
+  Runs on a local AI model ({{ ai_model }}); your messages are not sent to any outside service.
+</div>
+
+<div class="card chat-card section-gap">
+  <div class="chat-log" id="chatLog" aria-live="polite">
+    <div class="chat-row bot">
+      <div class="chat-avatar">🤖</div>
+      <div class="chat-bubble">{% if is_doctor %}Hello Dr. {{ session.get('name', '').replace('Dr. ', '').replace('Dr ', '').split(' ')[-1] }}. I can help with clinical reference questions, drug information, your upcoming appointments and drafting patient instructions. What do you need?{% else %}Hi {{ session.get('name', '').split(' ')[0] }}! I'm the MediAssist AI assistant. I can share general health tips, explain your medicines and appointments, and help you prepare for a doctor's visit. I can't diagnose or change medicines. What would you like to know?{% endif %}</div>
+    </div>
+  </div>
+
+  <div class="chat-chips" id="chatChips">
+    {% if is_doctor %}
+    <button type="button" class="chip" data-q="Summarise my upcoming appointments">📅 Summarise my appointments</button>
+    <button type="button" class="chip" data-q="What are common interactions to check when prescribing warfarin?">💊 Warfarin interactions</button>
+    <button type="button" class="chip" data-q="Draft simple discharge instructions for a patient with a mild viral fever">📝 Draft patient instructions</button>
+    <button type="button" class="chip" data-q="Give a brief SOAP note template I can reuse">🗒️ SOAP note template</button>
+    {% else %}
+    <button type="button" class="chip" data-q="Give me some healthy eating tips">🍎 Healthy eating tips</button>
+    <button type="button" class="chip" data-q="How much exercise do I need each week?">🏃 How much exercise do I need?</button>
+    <button type="button" class="chip" data-q="How do I prepare for a doctor's visit?">📅 Prepare for a doctor's visit</button>
+    <button type="button" class="chip" data-q="Explain my medicine schedule">💊 My medicine schedule</button>
+    {% endif %}
+  </div>
+
+  <div class="chat-input-row">
+    <input type="text" id="chatInput" maxlength="800" placeholder="{% if is_doctor %}Ask a clinical or scheduling question…{% else %}Type your health question…{% endif %}" autocomplete="off" />
+    <button type="button" class="btn btn-primary" id="chatSend">Send</button>
+  </div>
+</div>
+
+{% if session.get('role') != 'doctor' %}
+<div class="card section-gap" style="padding:18px 22px;">
+  <strong>Quick links:</strong>
+  <div class="quick-links">
+    <a class="btn btn-outline" href="{{ url_for('appointments') }}">📅 Book an appointment</a>
+    <a class="btn btn-outline" href="{{ url_for('medicine_logs') }}">💊 View your medicines</a>
+    <a class="btn btn-outline" href="{{ url_for('fitness') }}">🏃 Log a workout</a>
+    <a class="btn btn-outline" href="{{ url_for('food_logs') }}">🍴 Log a meal</a>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const log = document.getElementById("chatLog");
+  const input = document.getElementById("chatInput");
+  const sendBtn = document.getElementById("chatSend");
+  const history = [];          // earlier turns, sent back so the assistant remembers the chat
+  let busy = false;
+
+  function addRow(kind, text) {
+    const row = document.createElement("div");
+    row.className = "chat-row " + kind;
+    const avatar = document.createElement("div");
+    avatar.className = "chat-avatar";
+    avatar.textContent = kind === "bot" ? "🤖" : "🙂";
+    const bubble = document.createElement("div");
+    bubble.className = "chat-bubble";
+    bubble.textContent = text;          // textContent => model/user text is never treated as HTML
+    row.append(avatar, bubble);
+    log.appendChild(row);
+    log.scrollTop = log.scrollHeight;
+    return row;
+  }
+
+  async function sendMessage(text) {
+    text = (text || "").trim();
+    if (!text || busy) return;
+    busy = true; sendBtn.disabled = true;
+    addRow("user", text);
+    input.value = "";
+    const typing = addRow("bot", "Thinking…");
+    typing.classList.add("typing");
+    let reply;
+    try {
+      const res = await fetch("{{ url_for('ai_chat') }}", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: text, history: history.slice(-8) }),
+      });
+      if (res.redirected || res.status === 401) { window.location.href = "/"; return; }
+      const data = await res.json();
+      reply = data.reply || "Sorry, something went wrong.";
+      if (res.ok && !data.blocked) {
+        history.push({ role: "user", content: text }, { role: "assistant", content: reply });
+      }
+    } catch (err) {
+      reply = "I couldn't reach the server. Please check your connection and try again.";
+    }
+    typing.remove();
+    addRow("bot", reply);
+    busy = false; sendBtn.disabled = false; input.focus();
+  }
+
+  async function checkStatus() {
+    const pill = document.getElementById("aiStatus");
+    try {
+      const d = await (await fetch("{{ url_for('ai_status') }}")).json();
+      if (d.online && d.model_ready) { pill.textContent = "Online"; pill.className = "status-pill ok"; pill.title = "Model: " + d.model; }
+      else if (d.online) { pill.textContent = "Model not installed"; pill.className = "status-pill warn"; pill.title = "Run: ollama pull " + d.model; }
+      else { pill.textContent = "Offline"; pill.className = "status-pill bad"; pill.title = "Start Ollama: ollama serve"; }
+    } catch (e) { pill.textContent = "Unknown"; pill.className = "status-pill warn"; }
+  }
+
+  sendBtn.addEventListener("click", () => sendMessage(input.value));
+  input.addEventListener("keydown", (e) => { if (e.key === "Enter") sendMessage(input.value); });
+  document.querySelectorAll("#chatChips .chip").forEach((c) =>
+    c.addEventListener("click", () => sendMessage(c.dataset.q)));
+  checkStatus();
+</script>
+{% endblock %}

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>{% block title %}MediAssist{% endblock %} · MediAssist</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}" />
+{% block head %}{% endblock %}
+</head>
+<body>
+{# Shared page shell for: doctor dashboard, AI assistant.
+   The navigation changes depending on whether a doctor or a patient is logged in. #}
+{% set ep = request.endpoint %}
+{% set is_doctor = session.get('role') == 'doctor' %}
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark">✚</span>
+    MediAssist
+  </div>
+  <nav class="topbar-nav">
+    {% if is_doctor %}
+      <a href="{{ url_for('doctor_dashboard') }}" class="{{ 'active' if ep == 'doctor_dashboard' }}">🩺 Doctor Dashboard</a>
+    {% else %}
+      <a href="{{ url_for('dashboard') }}">🏠 Dashboard</a>
+      <a href="{{ url_for('appointments') }}">📅 Appointments</a>
+      <a href="{{ url_for('health_records') }}">📋 Health Records</a>
+      <a href="{{ url_for('medicine_logs') }}">💊 Medicine Logs</a>
+      <a href="{{ url_for('food_logs') }}">🍴 Food Logs</a>
+      <a href="{{ url_for('fitness') }}">🏃 Fitness</a>
+    {% endif %}
+    <a href="{{ url_for('ai_assistant') }}" class="{{ 'active' if ep == 'ai_assistant' }}">🤖 AI Assistant</a>
+  </nav>
+  {% include "_profile_menu.html" %}
+</header>
+
+<div class="app-shell">
+  <aside class="sidebar">
+    <ul class="side-nav">
+      {% if is_doctor %}
+        <li><a href="{{ url_for('doctor_dashboard') }}" class="{{ 'active' if ep == 'doctor_dashboard' }}"><span class="icon">🩺</span> Doctor Dashboard</a></li>
+      {% else %}
+        <li><a href="{{ url_for('dashboard') }}"><span class="icon">🏠</span> Dashboard</a></li>
+        <li><a href="{{ url_for('appointments') }}"><span class="icon">📅</span> Appointments</a></li>
+        <li><a href="{{ url_for('health_records') }}"><span class="icon">📋</span> Health Records</a></li>
+        <li><a href="{{ url_for('medicine_logs') }}"><span class="icon">💊</span> Medicine Logs</a></li>
+        <li><a href="{{ url_for('food_logs') }}"><span class="icon">🍴</span> Food Logs</a></li>
+        <li><a href="{{ url_for('fitness') }}"><span class="icon">🏃</span> Fitness</a></li>
+      {% endif %}
+      <li><a href="{{ url_for('ai_assistant') }}" class="{{ 'active' if ep == 'ai_assistant' }}"><span class="icon">🤖</span> AI Assistant</a></li>
+    </ul>
+  </aside>
+
+  <main class="main">
+    <div class="page">
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}
+          <div class="card flash-card">{{ messages[0] }}</div>
+        {% endif %}
+      {% endwith %}
+
+      {% block content %}{% endblock %}
+    </div>
+  </main>
+</div>
+
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

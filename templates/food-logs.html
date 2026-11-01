@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Food Logs · MediAssist</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}" />
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark">✚</span>
+    MediAssist
+  </div>
+  <nav class="topbar-nav">
+    <a href="{{ url_for('dashboard') }}">🏠 Dashboard</a>
+    <a href="{{ url_for('appointments') }}">📅 Appointments</a>
+    <a href="{{ url_for('health_records') }}">📋 Health Records</a>
+    <a href="{{ url_for('medicine_logs') }}">💊 Medicine Logs</a>
+    <a href="{{ url_for('food_logs') }}" class="active">🍴 Food Logs</a>
+    <a href="{{ url_for('fitness') }}">🏃 Fitness</a>
+    <a href="{{ url_for('ai_assistant') }}">🤖 AI Assistant</a>
+  </nav>
+  {% include "_profile_menu.html" %}
+</header>
+
+<div class="app-shell">
+
+  <aside class="sidebar">
+    <ul class="side-nav">
+      <li><a href="{{ url_for('dashboard') }}"><span class="icon">🏠</span> Dashboard</a></li>
+      <li><a href="{{ url_for('appointments') }}"><span class="icon">📅</span> Appointments</a></li>
+      <li><a href="{{ url_for('health_records') }}"><span class="icon">📋</span> Health Records</a></li>
+      <li><a href="{{ url_for('medicine_logs') }}"><span class="icon">💊</span> Medicine Logs</a></li>
+      <li><a href="{{ url_for('food_logs') }}" class="active"><span class="icon">🍴</span> Food Logs</a></li>
+      <li><a href="{{ url_for('fitness') }}"><span class="icon">🏃</span> Fitness</a></li>
+      <li><a href="{{ url_for('ai_assistant') }}"><span class="icon">🤖</span> AI Assistant</a></li>
+    </ul>
+  </aside>
+
+  <main class="main">
+    <div class="page">
+
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}
+          <div class="card" style="padding:14px 22px; margin-bottom:18px; border-color:var(--blue-500); color:var(--blue-700);">
+            {{ messages[0] }}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+
+      <div class="page-header">
+        <div>
+          <h1>Food Logs</h1>
+          <p>Rows come from MEALS — food, calories and date.</p>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('addMealModal')">+ Log Meal</button>
+      </div>
+
+      <div class="stat-grid" style="grid-template-columns: repeat(3, 1fr);">
+        <div class="stat-tile">
+          <div class="stat-icon tint-blue">🍽️</div>
+          <div class="stat-label">Today's calories</div>
+          <div class="stat-value">{{ stats.today_calories }}</div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-icon tint-green">📆</div>
+          <div class="stat-label">Meals logged today</div>
+          <div class="stat-value">{{ stats.meals_today }}</div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-icon tint-amber">📊</div>
+          <div class="stat-label">Daily average</div>
+          <div class="stat-value">{{ stats.weekly_avg }}</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2>Meal history</h2>
+          <span class="cell-muted">{{ meals|length }} entries</span>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Food</th>
+                <th>Calories</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for m in meals %}
+              <tr>
+                <td class="cell-primary">{{ m.food }}</td>
+                <td>{{ m.calories }} kcal</td>
+                <td class="cell-muted">{{ m.date.strftime("%d %b %Y") }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% if not meals %}
+        <div class="empty-state">
+          <div class="empty-icon">🍴</div>
+          <p>No meals logged yet.</p>
+          <button class="btn btn-primary" onclick="openModal('addMealModal')">+ Log Meal</button>
+        </div>
+        {% endif %}
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- ===== Log Meal Modal ===== -->
+<div class="modal-overlay" id="addMealModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Log a meal</h3>
+      <button class="modal-close" type="button" onclick="closeModal('addMealModal')">✕</button>
+    </div>
+    <form action="{{ url_for('add_meal') }}" method="POST">
+      <div class="modal-body">
+        <div class="field">
+          <label for="food">Food</label>
+          <input type="text" id="food" name="food" placeholder="e.g. Grilled chicken salad" required />
+        </div>
+        <div class="field">
+          <label for="calories">Calories</label>
+          <input type="number" id="calories" name="calories" min="0" placeholder="e.g. 350" required />
+        </div>
+        <div class="field">
+          <label for="date">Date</label>
+          <input type="date" id="date" name="date" value="{{ today }}" required />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModal('addMealModal')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Log Meal</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

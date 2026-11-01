@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Medicine Logs · MediAssist</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}" />
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark">✚</span>
+    MediAssist
+  </div>
+  <nav class="topbar-nav">
+    <a href="{{ url_for('dashboard') }}">🏠 Dashboard</a>
+    <a href="{{ url_for('appointments') }}">📅 Appointments</a>
+    <a href="{{ url_for('health_records') }}">📋 Health Records</a>
+    <a href="{{ url_for('medicine_logs') }}" class="active">💊 Medicine Logs</a>
+    <a href="{{ url_for('food_logs') }}">🍴 Food Logs</a>
+    <a href="{{ url_for('fitness') }}">🏃 Fitness</a>
+    <a href="{{ url_for('ai_assistant') }}">🤖 AI Assistant</a>
+  </nav>
+  {% include "_profile_menu.html" %}
+</header>
+
+<div class="app-shell">
+
+  <aside class="sidebar">
+    <ul class="side-nav">
+      <li><a href="{{ url_for('dashboard') }}"><span class="icon">🏠</span> Dashboard</a></li>
+      <li><a href="{{ url_for('appointments') }}"><span class="icon">📅</span> Appointments</a></li>
+      <li><a href="{{ url_for('health_records') }}"><span class="icon">📋</span> Health Records</a></li>
+      <li><a href="{{ url_for('medicine_logs') }}" class="active"><span class="icon">💊</span> Medicine Logs</a></li>
+      <li><a href="{{ url_for('food_logs') }}"><span class="icon">🍴</span> Food Logs</a></li>
+      <li><a href="{{ url_for('fitness') }}"><span class="icon">🏃</span> Fitness</a></li>
+      <li><a href="{{ url_for('ai_assistant') }}"><span class="icon">🤖</span> AI Assistant</a></li>
+    </ul>
+  </aside>
+
+  <main class="main">
+    <div class="page">
+
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}
+          <div class="card" style="padding:14px 22px; margin-bottom:18px; border-color:var(--blue-500); color:var(--blue-700);">
+            {{ messages[0] }}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+
+      <div class="page-header">
+        <div>
+          <h1>Medicine Logs</h1>
+          <p>Rows come from MEDICINE, each one linked to the PRESCRIPTION it was written on.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2>All medicines</h2>
+          <span class="cell-muted">{{ medicines|length }} medicine{{ "" if medicines|length == 1 else "s" }}</span>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Medicine</th>
+                <th>Dosage</th>
+                <th>Frequency</th>
+                <th>Duration</th>
+                <th>From prescription</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for m in medicines %}
+              <tr>
+                <td class="cell-primary">{{ m.name }}</td>
+                <td>{{ m.dosage }}</td>
+                <td>{{ m.frequency }}</td>
+                <td>{{ m.duration }}</td>
+                <td class="cell-muted">#{{ m.prescription_id }} — Dr. {{ m.doctor_name }} ({{ m.prescription_date.strftime("%d %b") }})</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% if not medicines %}
+        <div class="empty-state">
+          <div class="empty-icon">💊</div>
+          <p>No medicines logged yet. These are added by your doctor along with a prescription.</p>
+        </div>
+        {% endif %}
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

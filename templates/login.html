@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>MediAssist</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles/landing_page.css') }}">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,100..700;1,100..700&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap"
+    rel="stylesheet">
+</head>
+
+<body>
+  <!--body element-->
+  <div class="background-border">
+    <!--Left section-->
+    <div class="left-section">
+      <div class="left-part1">
+        <div class="app-name-container">
+          <div class="app-icon-container">
+            <img class="app-icon" src="{{url_for('static',filename='icons/app-icon.png')}}">
+          </div>
+          <div class="app-name">MediAssist</div>
+        </div>
+        <div class="heading-part1">Your Health,</div>
+        <div class="heading-part2">Our Priority</div>
+        <div class="description">MediAssist is your personal AI Healthcare Assistant that helps you manage appointments, track
+          health, and get AI-powered support.</div>
+        <div class="feature-container">
+          <div class="feature-icon">
+            <img class="secure-icon" src="{{url_for('static',filename='icons/secure-icon.png')}}">
+          </div>
+          <div class="feature-content">
+            <div class="feature-heading">Secure & Private</div>
+            <div class="feature-description">Your data is encrypted and kept 100% secure.</div>
+          </div>
+        </div>
+        
+        <div class="feature-container">
+          <div class="feature-icon">
+            <img class="secure-icon" src="{{url_for('static',filename='icons/calender-icon.png')}}">
+          </div>
+          <div class="feature-content">
+            <div class="feature-heading">Easy Appointments</div>
+            <div class="feature-description">Book, reschedule and manage appointments effortlessly.</div>
+          </div>
+        </div>
+        
+        <div class="feature-container">
+          <div class="feature-icon">
+            <img class="secure-icon" src="{{url_for('static',filename='icons/chat-icon.png')}}">
+          </div>
+          <div class="feature-content">
+            <div class="feature-heading">AI Health Support</div>
+            <div class="feature-description">Get instant answers to your health queries.</div>
+          </div>
+        </div>
+        
+        <div>
+          <div>
+            <img src="">
+          </div>
+          <div class="protection-container">
+            <div class="protection-icon-container">
+              <img class="protection-icon" src="{{url_for('static',filename='icons/protection-icon.svg')}}">
+            </div>
+            <div class="protection-statement">
+              Your health information is protected and handled securely.
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="left-part2">
+        <img class="doctor-image" src="{{url_for('static',filename='icons/doctor.png')}}">
+      </div>
+    </div>
+    <!--Right section-->
+    <div class="right-section">
+      <div class="login-box">
+        <div class="welcome-txt">Welcome Back!</div>
+        <div class="sign-in-txt">Sign in to continue to your account</div>
+
+        <!-- Toggle Buttons -->
+        <div class="toggle-row">
+          <button type="button" id="loginTabBtn" class="toggle-btn active" onclick="showLogin()">Login</button>
+          <button type="button" id="signupTabBtn" class="toggle-btn" onclick="showSignup()">Sign Up</button>
+          <button type="button" id="doctorTabBtn" class="toggle-btn" onclick="showDoctor()">Doctor Login</button>
+        </div>
+        
+        <!-- Flash messages (errors / success) -->
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <div class="flash-box">
+          {% for msg in messages %}
+          <p>{{ msg }}</p>
+          {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+        
+        <!-- Login Form -->
+        <form id="loginForm" action="/login" method="POST" style="display:block;">
+          <div class="email-txt">Email Address</div>
+          <div class="email-container">
+            <input class="email-box" type="email" name="email" placeholder="Enter your email" required>
+          </div>
+        
+          <div class="password-txt">Password</div>
+          <div class="password-container">
+            <input class="password-box" type="password" name="password" placeholder="Enter your password" required>
+          </div>
+        
+          <div class="forgot-password"><a href="#">Forgot Password?</a></div>
+        
+          <div class="sign-in-container">
+            <button class="sign-in-button" type="submit">Sign In</button>
+          </div>
+        </form>
+        
+        <!-- Signup Form -->
+        <form id="signupForm" action="/signup" method="POST" style="display:none;">
+          <div class="email-txt">Name</div>
+          <div class="email-container">
+            <input class="email-box" type="text" name="name" placeholder="Enter your name" required>
+          </div>
+        
+          <div class="email-txt">Email Address</div>
+          <div class="email-container">
+            <input class="email-box" type="email" name="email" placeholder="Enter your email" required>
+          </div>
+        
+          <div class="password-txt">Password</div>
+          <div class="password-container">
+            <input class="password-box" type="password" name="password" placeholder="Enter your password" required>
+          </div>
+        
+          <div class="doctor-hint">Sign up is for patients. Doctors: use the <b>Doctor Login</b> tab with the registration number issued to you.</div>
+
+          <div class="sign-in-container">
+            <button class="sign-in-button" type="submit">Create Account</button>
+          </div>
+        </form>
+
+        <!-- Doctor Login Form (registration number + password) -->
+        <form id="doctorForm" action="/doctor/login" method="POST" style="display:none;">
+          <div class="email-txt">Registration Number</div>
+          <div class="email-container">
+            <input class="email-box" type="text" name="registration_no" placeholder="e.g. MED-1001" autocomplete="username" required>
+          </div>
+
+          <div class="password-txt">Password</div>
+          <div class="password-container">
+            <input class="password-box" type="password" name="password" placeholder="Enter your password" autocomplete="current-password" required>
+          </div>
+
+          <div class="doctor-hint">Each doctor has a unique registration number and password stored in the hospital database.</div>
+
+          <div class="sign-in-container">
+            <button class="sign-in-button" type="submit">Doctor Sign In</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const forms = { login: 'loginForm', signup: 'signupForm', doctor: 'doctorForm' };
+    const tabs = { login: 'loginTabBtn', signup: 'signupTabBtn', doctor: 'doctorTabBtn' };
+
+    function showTab(name) {
+      for (const key in forms) {
+        document.getElementById(forms[key]).style.display = key === name ? 'block' : 'none';
+        document.getElementById(tabs[key]).classList.toggle('active', key === name);
+      }
+    }
+    function showLogin() { showTab('login'); }
+    function showSignup() { showTab('signup'); }
+    function showDoctor() { showTab('doctor'); }
+
+    // e.g. after a failed doctor login we come back to /#doctor
+    if (location.hash === '#doctor') showDoctor();
+  </script>
+
+</body>
+
+</html>
